@@ -18,8 +18,11 @@ class BaseRepository(BaseRepositoryInterface[T], Generic[T]):
         except self.model.DoesNotExist:
             return None
 
-    def get_all(self) -> list[T]:
-        return list(self.model.objects.all())
+    def get_all(self, **filters) -> list[T]:
+        queryset = self.model.objects.all()
+        if filters:
+            queryset = queryset.filter(**filters)
+        return list(queryset)
 
     def save(self, entity: T) -> T:
         entity.save()

@@ -21,14 +21,5 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  vue:
-    image: node:22-alpine
-    ports:
-      - "5173:5173"
-    working_dir: /app
-    command: echo "Vue placeholder - replace with your Vue app"
-    volumes:
-      - ./frontend:/app
-
 volumes:
   postgres_data:

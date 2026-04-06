@@ -12,8 +12,11 @@ class MockPostRepository(BaseRepositoryInterface[Post]):
     def find_by_id(self, entity_id: int) -> Post | None:
         return self._store.get(entity_id)
 
-    def get_all(self) -> list[Post]:
-        return list(self._store.values())
+    def get_all(self, **filters) -> list[Post]:
+        results = list(self._store.values())
+        for key, value in filters.items():
+            results = [e for e in results if getattr(e, key, None) == value]
+        return results
 
     def save(self, entity: Post) -> Post:
         if not entity.pk:

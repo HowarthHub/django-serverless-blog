@@ -11,7 +11,7 @@ class BaseRepositoryInterface(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    def get_all(self) -> list[T]:
+    def get_all(self, **filters) -> list[T]:
         pass
 
     @abstractmethod

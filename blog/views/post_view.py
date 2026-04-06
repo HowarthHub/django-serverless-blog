@@ -19,7 +19,7 @@ class PostViewSet(viewsets.ViewSet):
         return [IsAdminUser()]
 
     def list(self, request):
-        posts = self.service.get_all_posts()
+        posts = self.service.get_all_posts(status="published")
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
 

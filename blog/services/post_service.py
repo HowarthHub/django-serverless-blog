@@ -7,14 +7,11 @@ class PostService:
     def __init__(self, repository: BaseRepositoryInterface[Post]):
         self.repository = repository
 
-    def get_all_posts(self) -> list[Post]:
-        return self.repository.get_all()
+    def get_all_posts(self, **filters) -> list[Post]:
+        return self.repository.get_all(**filters)
 
     def get_post_by_id(self, post_id: int) -> Post | None:
         return self.repository.find_by_id(post_id)
-
-    def get_published_posts(self) -> list[Post]:
-        return self.repository.get_all()
 
     def create_post(self, **kwargs) -> Post:
         post = Post(**kwargs)
