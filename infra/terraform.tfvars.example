@@ -1,0 +1,3 @@
+aws_region       = "eu-west-2"
+db_password      = "change-me-to-a-strong-password"
+django_secret_key = "change-me-to-a-random-secret-key"
