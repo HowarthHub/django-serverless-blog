@@ -1,9 +1,9 @@
 # Outputs are printed after "terraform apply" completes
 # They give you the URLs and info you need to access your deployed app
 
-output "lambda_function_url" {
-  description = "Lambda function URL for the Django API"
-  value       = aws_lambda_function_url.api.function_url
+output "api_gateway_url" {
+  description = "API Gateway URL for the Django API"
+  value       = aws_apigatewayv2_api.api.api_endpoint
 }
 
 output "cloudfront_domain" {

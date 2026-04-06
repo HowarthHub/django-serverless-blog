@@ -7,5 +7,16 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 
 application = get_asgi_application()
 
-# AWS Lambda handler — API Gateway routes requests through this
-handler = Mangum(application)
+# Mangum wraps Django ASGI for Lambda
+_mangum_handler = Mangum(application)
+
+
+def handler(event, context):
+    # If the event contains a "manage" key, run a Django management command
+    # e.g. invoke with {"manage": "migrate"} or {"manage": "seed_posts"}
+    if "manage" in event:
+        from django.core.management import call_command
+        call_command(event["manage"])
+        return {"statusCode": 200, "body": f"Command '{event['manage']}' completed"}
+
+    return _mangum_handler(event, context)

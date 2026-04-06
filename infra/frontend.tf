@@ -44,9 +44,9 @@ resource "aws_cloudfront_distribution" "frontend" {
     origin_access_control_id = aws_cloudfront_origin_access_control.frontend.id
   }
 
-  # --- Origin 2: Lambda function URL for the Django API ---
+  # --- Origin 2: API Gateway for the Django API ---
   origin {
-    domain_name = replace(aws_lambda_function_url.api.function_url, "/(^https://|/$)/", "")
+    domain_name = "${aws_apigatewayv2_api.api.id}.execute-api.${var.aws_region}.amazonaws.com"
     origin_id   = "api"
 
     custom_origin_config {

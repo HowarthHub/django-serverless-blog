@@ -33,13 +33,14 @@ resource "aws_iam_role_policy_attachment" "lambda_vpc" {
 
 # =============================================================================
 # Lambda Function — Our Django API running serverless
-# This is where Mangum receives API Gateway requests and passes them to Django
+# This is where Mangum receives requests and passes them to Django
 # =============================================================================
 resource "aws_lambda_function" "api" {
   function_name = "${var.project_name}-api"
   role          = aws_iam_role.lambda.arn  # Use the IAM role we created above
   handler       = "core.asgi.handler"      # Entry point: Mangum handler in core/asgi.py
   runtime       = "python3.12"             # Python version on Lambda
+  architectures = ["arm64"]                # ARM — matches Apple Silicon Docker builds, cheaper on AWS
   timeout       = 30                       # Max execution time in seconds
   memory_size   = 512                      # MB of RAM (also affects CPU allocation)
 
@@ -72,18 +73,41 @@ resource "aws_lambda_function" "api" {
 }
 
 # =============================================================================
-# Lambda Function URL — Gives our Lambda a public HTTPS endpoint
-# Simpler than setting up API Gateway, perfect for this use case
-# CloudFront will proxy /api/* requests to this URL
+# API Gateway — HTTP API that routes requests to Lambda
+# Simpler and cheaper than REST API Gateway
 # =============================================================================
-resource "aws_lambda_function_url" "api" {
-  function_name      = aws_lambda_function.api.function_name
-  authorization_type = "NONE" # Public access (our Django app handles auth)
+resource "aws_apigatewayv2_api" "api" {
+  name          = "${var.project_name}-api"
+  protocol_type = "HTTP"
+}
 
-  cors {
-    allow_origins = ["*"]
-    allow_methods = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    allow_headers = ["*"]
-    max_age       = 3600 # Cache CORS preflight for 1 hour
-  }
+# Connect API Gateway to Lambda
+resource "aws_apigatewayv2_integration" "lambda" {
+  api_id                 = aws_apigatewayv2_api.api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.api.invoke_arn
+  payload_format_version = "2.0"
+}
+
+# Route all requests to Lambda
+resource "aws_apigatewayv2_route" "default" {
+  api_id    = aws_apigatewayv2_api.api.id
+  route_key = "$default"
+  target    = "integrations/${aws_apigatewayv2_integration.lambda.id}"
+}
+
+# Deploy the API with auto-deploy
+resource "aws_apigatewayv2_stage" "default" {
+  api_id      = aws_apigatewayv2_api.api.id
+  name        = "$default"
+  auto_deploy = true
+}
+
+# Allow API Gateway to invoke Lambda
+resource "aws_lambda_permission" "apigw" {
+  statement_id  = "AllowAPIGateway"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.api.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.api.execution_arn}/*/*"
 }

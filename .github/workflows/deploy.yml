@@ -104,7 +104,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-2
 
-      # Package Lambda
+      # Package Lambda with Linux ARM64 binaries
       - name: Package Lambda
         run: bash scripts/package_lambda.sh
 
@@ -117,6 +117,17 @@ jobs:
         working-directory: infra
         run: terraform apply -auto-approve
 
+      # Run migrations on RDS via Lambda
+      - name: Run migrations
+        run: |
+          aws lambda invoke \
+            --function-name django-serverless-blog-api \
+            --cli-binary-format raw-in-base64-out \
+            --payload '{"manage":"migrate"}' \
+            --region eu-west-2 \
+            /tmp/migrate-out.json
+          cat /tmp/migrate-out.json
+
       # Build and deploy frontend
       - name: Install frontend dependencies
         working-directory: frontend
@@ -124,8 +135,6 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
-        env:
-          VITE_API_URL: ""
         run: npm run build
 
       - name: Deploy frontend to S3
@@ -135,6 +144,6 @@ jobs:
 
       - name: Invalidate CloudFront cache
         run: |
-          DIST_ID=$(cd infra && terraform output -raw cloudfront_domain)
-          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='$DIST_ID'].Id" --output text)
+          DOMAIN=$(cd infra && terraform output -raw cloudfront_domain)
+          DIST_ID=$(aws cloudfront list-distributions --query "DistributionList.Items[?DomainName=='$DOMAIN'].Id" --output text)
           aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*"

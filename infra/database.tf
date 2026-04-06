@@ -13,7 +13,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "main" {
   identifier     = "${var.project_name}-db"  # Name in AWS console
   engine         = "postgres"
-  engine_version = "16.4"
+  engine_version = "16.13"
   instance_class = "db.t3.micro"             # Free tier eligible
 
   allocated_storage = 20                      # 20GB storage (free tier = up to 20GB)
