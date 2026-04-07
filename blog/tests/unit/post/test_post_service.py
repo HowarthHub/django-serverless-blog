@@ -6,8 +6,8 @@ from blog.services.post_service import PostService
 class MockPostRepository(BaseRepositoryInterface[Post]):
 
     def __init__(self):
-        self._store: dict[int, Post] = {}
-        self._next_id = 1
+        self._store: dict[int, Post] = {}  # In-memory dict acting as a fake database
+        self._next_id = 1  # Auto-increment ID counter, mimics DB primary key
 
     def find_by_id(self, entity_id: int) -> Post | None:
         return self._store.get(entity_id)

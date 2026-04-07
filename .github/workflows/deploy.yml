@@ -47,6 +47,9 @@ jobs:
       - name: Run migrations
         run: python manage.py migrate
 
+      - name: Type check
+        run: mypy blog/
+
       - name: Run tests
         run: python -m pytest -v
 
