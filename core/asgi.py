@@ -7,7 +7,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "core.settings")
 
 application = get_asgi_application()
 
-# Mangum wraps Django ASGI for Lambda
+# Mangum wraps Django ASGI (Asynchronous Server Gateway Interface) for Lambda
 _mangum_handler = Mangum(application)
 
 
